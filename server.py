@@ -99,3 +99,38 @@ class ToyHTTPRequestHandler:
         command = getattr(self, f'handle_{self.command}')
         command()
         
+    def handle_GET(self) -> None:
+        '''
+        Writes headers and the file to the socket.
+        '''
+        self.handle_HEAD()
+
+        with open(self.path, 'rb') as f:
+            body = f.read()
+
+        self.response_stream.write(body)
+        self.response_stream.flush()
+    
+    def handle_HEAD(self) -> None:
+        '''
+        write header to the socket
+        '''
+        #default to 200 ok
+
+        self._write_response_line(200)
+        self._write_head(
+            **{
+                'Content-Length': os.path.getsize(self.path)
+            }
+        )
+        self.response_stream.flush
+
+    def _write_response_line(self, status_code:int) -> None:
+        '''
+        write response for user
+        '''
+        response_line = f"HTTP/1 {status_code} {HTTPStatus(status_code).phrase}"
+        logger.info(response_line.encode())
+        self.response_stream(response_line.encode())
+
+
